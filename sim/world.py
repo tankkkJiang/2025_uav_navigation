@@ -48,9 +48,9 @@ class World:
         p.setGravity(0, 0, -9.8)
 
     def _setup_camera(self):
-        camera_target = [0, 0, 0]
-        camera_yaw = 45
-        camera_pitch = -45
+        camera_target = [0, 0, 0] # 相机注视的目标点（世界坐标）
+        camera_yaw = 45           # 绕竖直轴的水平旋转角度（度）
+        camera_pitch = -45        # 绕水平方向（右轴）的俯仰角（度），负值表示俯视
         p.resetDebugVisualizerCamera(
             cameraDistance=600,
             cameraYaw=camera_yaw,
