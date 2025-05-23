@@ -1,3 +1,8 @@
+"""
+sim/scenes/random_scene.py
+"""
+
+
 import pybullet as p
 import pybullet_data
 import numpy as np

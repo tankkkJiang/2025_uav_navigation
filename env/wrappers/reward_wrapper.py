@@ -1,3 +1,7 @@
+"""
+env/wrappers/reward_wrapper.py
+"""
+
 import numpy as np
 
 class RewardComponent:

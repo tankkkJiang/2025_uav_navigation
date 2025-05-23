@@ -1,3 +1,10 @@
+# UAV Navigation
+
+## 参考资料
+在下述仓库基础上进行整理工作。
+https://github.com/congshan22104/navigation_strategy.git
+
+
 深度图：
     PyBullet 使用的是 OpenGL 风格的 z-buffer 深度图，这是一种 非线性映射。
     映射公式使得 近处对象的深度变化很敏感，而 远处对象的深度变化被极度压缩；

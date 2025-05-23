@@ -1,4 +1,8 @@
-from sim.scenes.random_scene import RandomScene 
+"""
+sim/scenes/voxelized_random_scene.py
+"""
+
+from sim.scenes.random_scene import RandomScene
 import numpy as np
 
 class VoxelizedRandomScene(RandomScene):

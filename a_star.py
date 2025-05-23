@@ -1,3 +1,7 @@
+"""
+a_star.py
+"""
+
 import numpy as np
 from env import TrajectoryTrackingEnv
 from utils.astar_planner import AStarPlanner3D  # 即上面定义的类保存的文件

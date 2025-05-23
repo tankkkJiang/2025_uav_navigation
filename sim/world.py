@@ -1,3 +1,7 @@
+"""
+sim/world.py
+"""
+
 import pybullet as p
 import pybullet_data
 import logging
