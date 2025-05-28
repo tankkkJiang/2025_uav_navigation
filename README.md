@@ -80,7 +80,13 @@ sim/world.py 是仿真总控台，统一管理场景与无人机。
 1. 在 `reward_wrapper.py` 里新增一个继承自 `RewardComponent` 的类；
 2. 在 YAML 的 `active_components` 中放开注释、写上它的类名和权重。把其他权重进行修改。
 
-## 3. 其他
+## 3. 运行
+安装环境
+```bash
+pip install -e .
+```
+
+## 4. 其他
 ### 深度图
 PyBullet 使用的是 OpenGL 风格的 z-buffer 深度图，这是一种 非线性映射。
 映射公式使得 近处对象的深度变化很敏感，而 远处对象的深度变化被极度压缩；
