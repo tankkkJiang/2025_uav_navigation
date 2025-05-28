@@ -9,23 +9,34 @@ https://github.com/congshan22104/navigation_strategy.git
 ```bash
 drone_navigation/                            # 项目根目录
 ├── config/
-│   └── navigation_env_config.yaml           # 仿真环境参数（场景、无人机、动作、奖励等）
+│   ├── navigation_env_config.yaml           # 仿真环境参数（场景、无人机、动作、奖励等）
+│   └── navrl_env_config.yaml
 ├── env/
 │   ├── wrappers/
+│   │   ├── navrl_reward_wrapper.py
 │   │   └── reward_wrapper.py                # 各种奖励组件的实现
 │   ├── navigation_env.py                    # 基于Gym封装的导航环境
+│   ├── navrl_env.py                         # 复现的导航环境
 │   └── trajectory_track_env.py              # 基于Gym封装的轨迹跟踪环境
 ├── sim/
 │   ├── agents/
 │   │   └── drone_agent.py                   # 无人机Agent：状态管理、物理控制、深度图获取
 │   └── scenes/
 │       ├── random_scene.py                  # 随机障碍物场景
+│       ├── navrl_scene.py                   # 复现的导航场景
 │       ├── real_scene.py                    # 真实建筑模型场景
 │       └── voxelized_random_scene.py        # 随机场景的体素化实现
 │   └── world.py                             # PyBullet初始化、场景构建、DroneAgent管理
 ├── utils/
 │   ├── depth_feature_extractors.py          # 特征提取器
-├── ppo_discrete_main.py                     
+│   └── depth_utils.py                        # 深度图处理工具
+├── result/                                    # 结果存储目录
+├── models/                                   # 模型存储目录
+│   ├── ppo_discrete_rnn/                  # PPO离散动作RNN模型
+│   │   ├── normalization.py
+│   │   ├── ppo_discrete_rnn.py
+│   └── └── replaybuffer.py    
+├── test_ppo_discrete_rnn.py          
 └── train_ppo_discrete_rnn.py                
 ```
 

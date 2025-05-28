@@ -1,0 +1,74 @@
+# -------------------- 基础 --------------------
+use_gui: False          # 训练阶段通常不开 GUI
+
+# 场景 -------------------------------------------------
+scene:
+  type: navrl           # World 会自动选择 NavRLScene
+  voxel:
+    size: 1.0
+  obstacle:
+    # ---- 静态障碍 ----
+    num_obstacles: 800
+    min_radius: 1.0
+    max_radius: 2.5
+    min_height: 2.0
+    max_height: 6.0
+    # ---- 动态障碍 ----
+    dynamic:
+      num_obstacles: 20
+      min_radius: 0.6
+      max_radius: 1.2
+      min_height: 1.0
+      max_height: 2.0
+      max_speed: 1.0      # m/s
+  region:
+    x_min: -25   # 50 m×50 m 区域
+    x_max:  25
+    y_min: -25
+    y_max:  25
+    z_min: 0
+    z_max: 10
+
+# 目标采样区域（水平 50 m，固定 z）
+goal_region:
+  x_min: -25
+  x_max:  25
+  y_min: -25
+  y_max:  25
+  z: 1.5
+
+# 无人机 ------------------------------------------------
+drone:
+  init_pos: random
+  urdf_path: "assets/cf2x.urdf"
+
+# 动作 --------------------------------------------------
+action:
+  v_limit: 2.0          # m/s，连续速度上限
+
+# 观测 --------------------------------------------------
+observation:
+  # 动态障碍
+  num_dyn: 5
+  dyn_feat_dim: 10      # [dir(3), dist, vel(3), size(3)] = 10
+  # 静态射线
+  num_h: 36             # 每 10°
+  num_v: 3              # 水平 + 两个俯仰
+  max_ray: 20.0         # m
+  # 观测维度由 env 自动推算；如需归一化请在算法侧处理
+
+# 奖励 --------------------------------------------------
+reward:
+  weights:
+    vel:     1.0
+    ss:      1.0
+    ds:      1.0
+    smooth:  0.1
+    height:  0.1
+  success_reward:    5.0
+  collision_penalty: -5.0
+
+# Episode ----------------------------------------------
+episode:
+  max_episode_timesteps: 400
+  action_repeat: 60     # 与 navigation_env 保持一致
