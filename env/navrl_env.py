@@ -1,5 +1,6 @@
 # coding: utf‑8
 """
+env/navrl_env.py
 NavRL 环境（静态 + 动态障碍，连续 3D 速度控制）
 与 sim.world.World 解耦，所有物理细节交给 World。
 """
@@ -23,7 +24,7 @@ class NavRLEnv(gym.Env):
     观测：
         S_int ∈ R7  +  S_dyn (Nd×M)  +  S_stat (Nh×Nv) → 展平成 1 维
     动作：
-        V_ctrl ∈ R3 ，范围 [‑v_lim , v_lim]
+        \hat V_ctrl^G ∈ [0,1]^3 （目标坐标系下归一化控制向量），后面实现 hat_vg → v_g → v_w
     """
     metadata = {"render_modes": []}
 
@@ -57,12 +58,10 @@ class NavRLEnv(gym.Env):
 
     def _build_spaces(self):
         # ----- 动作 -----
-        v_lim = self.cfg["action"]["v_limit"]          # 论文：2 m/s
-        self.action_space = spaces.Box(
-            low  = np.float32([-v_lim, -v_lim, -v_lim]),
-            high = np.float32([ v_lim,  v_lim,  v_lim]),
-            dtype=np.float32
-        )
+        self.v_lim = self.cfg["action"]["v_limit"]
+        self.action_space = spaces.Box(low=np.float32([0, 0, 0]),
+                                       high=np.float32([1, 1, 1]),
+                                       dtype=np.float32)
 
         # ----- 观测 -----
         obs_cfg = self.cfg["observation"]
@@ -103,16 +102,30 @@ class NavRLEnv(gym.Env):
         self.start_pos  = np.array(self.world.drone.state.position)
         self.goal_pos   = self._sample_goal()
 
-        obs = self._get_obs()
+        # 在目标/世界坐标系之间构造旋转矩阵
+        gx    = self.goal_pos - self.start_pos
+        gx[2] = 0.0
+        gx   /= (np.linalg.norm(gx) + 1e-6)            # e1
+        gz    = np.array([0, 0, 1], dtype=np.float32)  # e3
+        gy    = np.cross(gz, gx)                       # e2
+        self.R_g2w = np.stack([gx, gy, gz], axis=1)    # 3×3
+        self.R_w2g = self.R_g2w.T
+
+        # 记录目标在 G 坐标中的 x 坐标（其余为 0）
+        self.goal_dist = np.linalg.norm(self.goal_pos - self.start_pos)
+
+        obs = self._get_obs()  # 坐标系就绪后再取观测
         self.comp_total = {c.name: 0.0 for c in self.reward_components}
+
         return obs, {}
 
     def step(self, action: np.ndarray):
-        action = np.clip(action.astype(np.float32),
-                         self.action_space.low,
-                         self.action_space.high)
+        # 归一化 → 真实速度（目标坐标系）→ 世界坐标系
+        hat_vg = np.clip(action.astype(np.float32), 0.0, 1.0)
+        v_g    = self.v_lim * (2.0 * hat_vg - 1.0)          # [-v_lim, v_lim]
+        v_w    = self.R_g2w @ v_g                            # 3D 世界向量
         # 推进物理
-        collided, _ = self.world.step(action, num_steps=self.action_repeat)
+        collided, _ = self.world.step(v_w, num_steps=self.action_repeat)
 
         self.step_cnt += 1
         arrived  = self._check_arrived()
@@ -120,7 +133,7 @@ class NavRLEnv(gym.Env):
         done = collided or arrived or timeout
 
         obs = self._get_obs()
-        reward, comp_rs = self._calc_reward(obs, arrived, collided, action)
+        reward, comp_rs = self._calc_reward(obs, arrived, collided, v_g)
 
         info = {
             "arrival": arrived,
@@ -132,13 +145,13 @@ class NavRLEnv(gym.Env):
             self.comp_total[k] += v
             info[f"episode/{k}"] = self.comp_total[k]
 
-        self.prev_vel = action.copy()
+        self.prev_vel = v_g  # 在目标坐标系内算 smooth
         return obs, reward, done, info
 
     # ------------------------------------------------------------------
     # 内部工具
     # ------------------------------------------------------------------
-    # 目标生成（50 m×50 m）
+    # 目标生成（50m×50m）
     def _sample_goal(self):
         region = self.cfg["goal_region"]         # {x_min,x_max,y_min,y_max,z}
         x = np.random.uniform(region["x_min"], region["x_max"])
@@ -158,31 +171,36 @@ class NavRLEnv(gym.Env):
     # ------------------------------------------------------------
     def _get_obs(self):
         obs_cfg = self.cfg["observation"]
-        p_r = np.array(self.world.drone.state.position, dtype=np.float32)
-        v_r = np.array(self.world.drone.state.linear_vel, dtype=np.float32)
 
-        # --------- S_int (7) ---------
-        dir_pg = self.goal_pos - p_r
-        dist_pg = np.linalg.norm(dir_pg) + 1e-6
-        dir_norm = dir_pg / dist_pg
-        s_int = np.concatenate([dir_norm, [dist_pg], v_r], axis=0)   # (7,)
+        # ----- 世界 → 目标坐标系 -----
+        p_r_w = np.array(self.world.drone.state.position, dtype=np.float32)
+        v_r_w = np.array(self.world.drone.state.linear_vel, dtype=np.float32)
+        # 位置、速度映射到 G
+        p_r_g = self.R_w2g @ (p_r_w - self.start_pos)  # 3,
+        v_r_g = self.R_w2g @ v_r_w  # 3,
+
+        # --------- S_int (7)  -----------------------------------
+        # 目标在 G 中是 [goal_dist, 0, 0]
+        dir_pg_g = np.array([self.goal_dist, 0.0, 0.0], dtype=np.float32) - p_r_g
+        dist_pg = np.linalg.norm(dir_pg_g) + 1e-6
+        dir_norm = dir_pg_g / dist_pg
+        s_int = np.concatenate([dir_norm, [dist_pg], v_r_g], axis=0)  # (7,)
 
         # --------- S_dyn ---------
-        dyn_feats = self.world.drone.get_nearest_dynamic_obs(
-            k=obs_cfg["num_dyn"])        # 返回 List[dict]
-        s_dyn = []
-        for d in dyn_feats:
-            rel = d["pos"] - p_r
-            dist = np.linalg.norm(rel) + 1e-6
-            dir_rel = rel / dist
-            feat = np.concatenate([dir_rel, [dist], d["vel"], d["size"]], axis=0)
-            s_dyn.append(feat)
-        if len(s_dyn) < obs_cfg["num_dyn"]:
-            pad = np.zeros((obs_cfg["num_dyn"] - len(s_dyn),
-                            obs_cfg["dyn_feat_dim"]), dtype=np.float32)
-            s_dyn = np.vstack(s_dyn) if s_dyn else pad
-            s_dyn = np.vstack([s_dyn, pad])
-        s_dyn = s_dyn.flatten()
+        dyn_list = self.world.drone.get_nearest_dynamic_obs(k=obs_cfg["num_dyn"])  # List[dict]
+        num_dyn = obs_cfg["num_dyn"]
+        feat_dim = obs_cfg["dyn_feat_dim"]
+
+        buf = np.zeros((num_dyn, feat_dim), dtype=np.float32)  # 全零初始化
+        for i, d in enumerate(dyn_list[:num_dyn]):  # 最多填 num_dyn 条
+            rel_w = d["pos"] - p_r_w
+            rel_g = self.R_w2g @ rel_w
+            dist = np.linalg.norm(rel_g) + 1e-6
+            dir_g = rel_g / dist
+            vel_g = self.R_w2g @ d["vel"]
+            buf[i] = np.concatenate([dir_g, [dist], vel_g, d["size"]], axis=0)
+
+        s_dyn = buf.flatten()
 
         # --------- S_stat ---------
         rays = self.world.drone.cast_static_rays(

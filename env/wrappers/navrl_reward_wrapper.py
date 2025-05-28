@@ -1,5 +1,6 @@
 # coding: utf‑8
 """
+env/wrappers/navrl_reward_wrapper.py
 NavRL 论文版奖励组件
 """
 import numpy as np
