@@ -80,6 +80,6 @@ def test(folder_path):
 
 if __name__ == "__main__":
     test(
-        folder_path="./result/ppo_discrete_rnn_s0_0521_164703",
+        folder_path="./result/ppo_discrete_rnn_s0_0523_103530",
     )
 
