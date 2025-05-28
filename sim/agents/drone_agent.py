@@ -332,6 +332,85 @@ class DroneAgent:
         plt.close()
 
         print(f"深度图已保存至: {save_path}")
+
+    def cast_static_rays(self, num_h: int, num_v: int, max_dist: float):
+        """
+        以无人机当前位置为原点，按照 (yaw,pitch) 网格发射射线。
+        这里只做简单实现：对每条射线调用 PyBullet rayTest，返回距离数组
+        长度 = num_h * num_v ；若未击中返回 max_dist
+        """
+        import math
+        pos, _ = p.getBasePositionAndOrientation(self.id)
+        pos = np.array(pos)
+
+        # 垂直方向角度列表（–pitch 向下，+pitch 向上）。示例：num_v=3 → [-15°,0°,15°]
+        if num_v == 1:
+            pitch_list = [0.0]
+        else:
+            max_pitch = math.radians(15.0)                        # 最多 ±15°
+            pitch_list = np.linspace(-max_pitch, max_pitch, num_v)
+
+        yaw_list = np.linspace(0, 2*math.pi, num_h, endpoint=False)
+        from_pts, to_pts = [], []
+        for pitch in pitch_list:
+            for yaw in yaw_list:
+                # 球坐标 → 单位向量
+                dx = math.cos(pitch) * math.cos(yaw)
+                dy = math.cos(pitch) * math.sin(yaw)
+                dz = math.sin(pitch)
+                dir_vec = np.array([dx, dy, dz], dtype=np.float32)
+                from_pts.append(pos)
+                to_pts.append(pos + dir_vec * max_dist)
+
+        # 一批 rayTest
+        results = p.rayTestBatch(from_pts, to_pts, numThreads=0)
+        dists = []
+        for hit, to_pt in zip(results, to_pts):
+            hit_fraction = hit[2]   # 0~1
+            if hit_fraction < 1.0:
+                dists.append(hit_fraction * max_dist)
+            else:
+                dists.append(max_dist)
+        return dists
+
+
+    # 场景引用（由 World 注入）
+    def set_scene(self, scene):
+        """World 创建完 Drone 后调用，把场景引用给无人机。"""
+        self._scene = scene            # NavRLScene 实例，含 dynamic_obs 列表
+
+
+    # NavRLEnv 需要的动态障碍接口
+    def get_nearest_dynamic_obs(self, k: int = 5):
+        """
+        返回距离当前无人机最近的 k 个动态障碍信息列表，每项字典：
+        { 'pos': np.ndarray(3), 'vel': np.ndarray(3), 'size': np.ndarray(3) }
+        若场景中不足 k 个则返回实际数量。
+        """
+        if not hasattr(self, "_scene") or not hasattr(self._scene, "dynamic_obs"):
+            return []          # 兼容无动态障碍场景
+
+        dyn_data = []
+        self_pos, _ = p.getBasePositionAndOrientation(self.id)
+        self_pos = np.array(self_pos, dtype=np.float32)
+
+        for obs in self._scene.dynamic_obs:
+            pos_w, _ = p.getBasePositionAndOrientation(obs["body"])
+            pos_w = np.array(pos_w, dtype=np.float32)
+            dist   = np.linalg.norm(pos_w - self_pos)
+            dyn_data.append((
+                dist,
+                {
+                    "pos":  pos_w,
+                    "vel":  obs["vel"].astype(np.float32),
+                    "size": np.array([obs["radius"],
+                                      obs["radius"],
+                                      obs["height"]], dtype=np.float32)
+                }
+            ))
+
+        dyn_data.sort(key=lambda x: x[0])          # 按距离升序
+        return [item[1] for item in dyn_data[:k]]
     
     def remove(self):
         p.removeBody(self.id)

@@ -60,7 +60,7 @@ class World:
         camera_yaw = 45           # 绕竖直轴的水平旋转角度（度）
         camera_pitch = -45        # 绕水平方向（右轴）的俯仰角（度），负值表示俯视
         p.resetDebugVisualizerCamera(
-            cameraDistance=600,
+            cameraDistance=100,
             cameraYaw=camera_yaw,
             cameraPitch=camera_pitch,
             cameraTargetPosition=camera_target
@@ -144,6 +144,7 @@ class World:
                 urdf_path=urdf_path,
                 color=[0, 0, 1, 1],
             )
+            self.drone.set_scene(self.scene)
             
             # 检查位置是否与障碍物碰撞
             is_collided, _ = self.drone.check_collision(threshold=5.0)
