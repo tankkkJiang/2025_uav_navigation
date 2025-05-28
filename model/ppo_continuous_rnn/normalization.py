@@ -1,5 +1,5 @@
 """
-model/ppo_discrete_rnn/normalization
+model/ppo_continuous_rnn/normalization
 """
 
 import numpy as np

@@ -1,5 +1,5 @@
 """
-model/ppo_discrete_rnn/replaybuffer.py
+model/ppo_continuous_rnn/replaybuffer.py
 """
 
 

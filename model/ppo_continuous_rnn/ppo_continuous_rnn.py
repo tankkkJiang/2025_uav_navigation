@@ -1,4 +1,8 @@
-# 连续动作 Beta‑PPO + RNN
+"""
+model/ppo_continuous_rnn/ppo_continuous_rnn.py
+连续动作 Beta‑PPO + RNN
+"""
+
 import torch, torch.nn as nn, numpy as np, statistics
 from torch.distributions import Beta
 from torch.utils.data.sampler import BatchSampler, SequentialSampler
