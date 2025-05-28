@@ -1,0 +1,127 @@
+_wandb:
+    value:
+        cli_version: 0.19.10
+        m: []
+        python_version: 3.10.16
+        t:
+            "1":
+                - 1
+                - 55
+            "2":
+                - 1
+                - 55
+            "3":
+                - 13
+                - 16
+                - 23
+                - 24
+                - 55
+                - 61
+            "4": 3.10.16
+            "5": 0.19.10
+            "8":
+                - 5
+            "12": 0.19.10
+            "13": linux-x86_64
+K_epochs:
+    value: 10
+action:
+    value:
+        range: 1/8
+        type: discrete_adjust
+algo_name:
+    value: ppo_discrete
+batch_size:
+    value: 16
+device:
+    value: cuda:0
+drone:
+    value:
+        init_pos: random
+        urdf_path: assets/cf2x.urdf
+entropy_coef:
+    value: 0.01
+episode:
+    value:
+        action_repeat: 60
+        max_episode_timesteps: 200
+epsilon:
+    value: 0.2
+evaluate_freq:
+    value: 5000
+evaluate_times:
+    value: 3
+gamma:
+    value: 0.95
+hidden_dim:
+    value: 64
+lamda:
+    value: 0.95
+lr:
+    value: 0.0003
+max_train_steps:
+    value: 500000
+mini_batch_size:
+    value: 2
+observation:
+    value:
+        dim: 25
+        features: null
+        grid_shape: (5,5)
+        normalize: true
+        to_real_distance: false
+reward:
+    value:
+        active_components:
+            image_nonlinear_collision_penalty_2: 1
+        extra_rewards:
+            arrival_reward: 5
+            collision_penalty: -5
+rollout:
+    value:
+        num_test_episodes: 20
+        save_freq: 20
+save_freq:
+    value: 20
+scene:
+    value:
+        map:
+            building_path: assets/building/building.obj
+        obstacle:
+            max_height: 200
+            max_radius: 10
+            min_height: 60
+            min_radius: 5
+            num_obstacles: 100
+        region:
+            x_max: 250
+            x_min: -250
+            y_max: 250
+            y_min: -250
+            z_max: 200
+            z_min: 0
+        type: voxelized
+        voxel:
+            size: 1
+seed:
+    value: 0
+set_adam_eps:
+    value: true
+use_adv_norm:
+    value: true
+use_grad_clip:
+    value: true
+use_gru:
+    value: true
+use_gui:
+    value: false
+use_lr_decay:
+    value: true
+use_orthogonal_init:
+    value: true
+use_reward_scaling:
+    value: true
+use_state_norm:
+    value: false
+use_tanh:
+    value: true
