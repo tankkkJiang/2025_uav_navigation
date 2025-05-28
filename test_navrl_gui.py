@@ -8,6 +8,7 @@ python test_navrl_gui.py --model logs/ppo_continuous_rnn_s0_0601_120000/models/f
 
 import os, time, argparse, yaml, torch, numpy as np
 import gym
+import pybullet as p
 from typing import Dict
 
 from env.navrl_env import NavRLEnv
@@ -21,6 +22,26 @@ def load_env(gui: bool = True) -> NavRLEnv:
         cfg: Dict = yaml.safe_load(f)
     cfg["use_gui"] = gui                             # 强制开启 GUI
     return NavRLEnv(cfg)
+
+def draw_circle(center: np.ndarray, radius: float = 0.3, color=(0,1,0), segments: int = 36):
+    """在 PyBullet GUI 中画一个圆圈"""
+    theta = np.linspace(0, 2*np.pi, segments)
+    pts = [(center[0] + radius*np.cos(t), center[1] + radius*np.sin(t), center[2]) for t in theta]
+    for i in range(len(pts)):
+        a = pts[i]
+        b = pts[(i+1) % len(pts)]
+        p.addUserDebugLine(a, b, lineColorRGB=color, lineWidth=2, lifeTime=0)  # lifeTime=0 永久
+
+def mark_start_goal(env: NavRLEnv):
+    """在GUI中画出 Ps(P_start) 和 Pg(P_goal)"""
+    Ps = env.start_pos
+    Pg = env.goal_pos
+    # 画圆
+    draw_circle(Ps, radius=0.3, color=(0,1,0))
+    draw_circle(Pg, radius=0.3, color=(1,0,0))
+    # 标字，文字大小仅示意
+    p.addUserDebugText("Ps", Ps + np.array([0,0,0.5]), textColorRGB=[0,1,0], textSize=1.2, lifeTime=0)
+    p.addUserDebugText("Pg", Pg + np.array([0,0,0.5]), textColorRGB=[1,0,0], textSize=1.2, lifeTime=0)
 
 def build_agent(env: NavRLEnv, model_path: str) -> PPO_continuous_RNN:
     """根据保存目录里的 ppo_config.yaml 恢复超参并加载权重"""
@@ -60,6 +81,9 @@ def random_play(env: NavRLEnv, hz: int = 30):
     try:
         while True:
             obs, _ = env.reset()
+            if env.world.use_gui:
+                mark_start_goal(env)
+
             terminated = False
             ep += 1
             while not terminated:
@@ -81,6 +105,9 @@ def policy_play(env: NavRLEnv, agent: PPO_continuous_RNN, hz: int = 30):
     try:
         while True:
             obs, _ = env.reset()
+            if env.world.use_gui:
+                mark_start_goal(env)
+
             agent.reset_rnn()
             terminated = False
             ep += 1

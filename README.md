@@ -36,6 +36,9 @@ drone_navigation/                            # 项目根目录
 │   │   ├── normalization.py
 │   │   ├── ppo_discrete_rnn.py
 │   └── └── replaybuffer.py    
+├── train_ppo_navrl.py
+├── test_ppo_navrl.py
+├── test_navrl_gui.py 
 ├── test_ppo_discrete_rnn.py          
 └── train_ppo_discrete_rnn.py                
 ```
