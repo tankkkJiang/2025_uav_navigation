@@ -8,14 +8,14 @@ scene:
     size: 1.0
   obstacle:
     # ---- 静态障碍 ----
-    num_obstacles: 800
+    num_obstacles: 0
     min_radius: 1.0
     max_radius: 2.5
     min_height: 2.0
     max_height: 6.0
     # ---- 动态障碍 ----
     dynamic:
-      num_obstacles: 20
+      num_obstacles: 0
       min_radius: 0.6
       max_radius: 1.2
       min_height: 1.0
