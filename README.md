@@ -1,11 +1,11 @@
 # UAV Navigation
 
-## 参考资料
+## 1. 参考资料
 在下述仓库基础上进行整理工作。
 https://github.com/congshan22104/navigation_strategy.git
 
 
-## 代码架构
+## 2. 代码架构与功能
 ```bash
 drone_navigation/                            # 项目根目录
 ├── config/
@@ -23,25 +23,51 @@ drone_navigation/                            # 项目根目录
 │       ├── real_scene.py                    # 真实建筑模型场景
 │       └── voxelized_random_scene.py        # 随机场景的体素化实现
 │   └── world.py                             # PyBullet初始化、场景构建、DroneAgent管理
-├── ppo_discrete_main.py                     # 启动脚本：训练 & 评估离散PPO
-└── train_ppo_discrete_rnn.py                # 启动脚本：训练 & 评估带RNN的离散PPO
+├── ppo_discrete_main.py                     
+└── train_ppo_discrete_rnn.py                
 ```
 
-### Env 环境层
+### 2.1 Env 环境层
 `Env` 的代码把底层仿真层的 PyBullet 仿真（`sim`，包括场景和无人机）包装成一个标准的强化学习环境，关心如何接受一个动作、调用仿真推进、收集观测、计算奖励并返回给 RL 算法。
 
-#### Env 模块化设计
+#### 2.1.1 Env 模块化设计
 1. 动作空间：根据配置选择连续／离散、多种调节方式； 
 2. 观测处理：从深度图池化到一维向量； 
 3. 奖励计算：组件化地调用各个 `RewardComponent`； 
 4. 信息返回：把 “碰撞／到达／超时” 这些标志，以及累计奖励等打包到 info 中。
 
-### Sim 仿真层
-接收来自上层环境层的速度指令，循环推进多帧物理仿真，与pybullet交互，构建无人机和场景。
+#### 2.1.2 各份代码讲解
+##### env/trajectory_track_env.py — 轨迹跟踪环境
+
+接受一条事先规划好的三维轨迹（path: np.ndarray，形状为 N×3），控制无人机按照这条轨迹逐点飞行。
+
+每一步`step`计算当前位置到目标的距离，生成一个恒速（或基于距离衰减）的速度向量，调用 drone.apply_velocity_control 推进仿真。
+
+##### env/navigation_env.py — 强化学习导航环境
+
+接受单步动作（连续或离散，根据配置），计算一步的物理推进、多帧重复执行（action_repeat），并返回标准的 (obs, reward, done, info)。
+
+### 2.2 Sim 仿真层
+接收来自上层环境层的速度指令，循环推进多帧物理仿真，与pybullet交互，构建无人机和场景。为上层强化学习或轨迹跟踪环境提供清晰、简单的物理仿真接口。
+
+#### 2.2.1 各份代码讲解 
+##### sim/world.py — PyBullet世界
+负责连接PyBullet、构建场景（调用 RandomScene / RealScene / VoxelizedRandomScene等）、生成 DroneAgent。
+
+sim/world.py 是仿真总控台，统一管理场景与无人机。
+
+##### sim/agents/drone_agent.py — 无人机Agent
+
+##### sim/scenes/... — 场景
+###### sim/scenes/random_scene.py — 随机障碍物场景
+在平面上随机生成若干圆柱或长方体障碍物，并将它们添加到 PyBullet 中。维护一个 obstacle_list 以便后续查询（例如可视化或避障检测）。
+###### sim/scenes/real_scene.py — 真实建筑模型场景
+将用户提供的三维网格（.obj、.stl、.dae 等）加载为不可动态碰撞（静态环境），以模拟真实世界的建筑或地形。
+###### sim/scenes/voxelized_random_scene.py — 体素化随机场景
+在随机场景的基础上，额外维护一个三维体素网格（voxel_map），标记所有障碍物占据的体素单元。
 
 
-
-## 其他
+## 3. 其他
 ### 深度图
 PyBullet 使用的是 OpenGL 风格的 z-buffer 深度图，这是一种 非线性映射。
 映射公式使得 近处对象的深度变化很敏感，而 远处对象的深度变化被极度压缩；
