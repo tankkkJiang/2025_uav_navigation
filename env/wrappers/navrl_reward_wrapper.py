@@ -20,7 +20,7 @@ class VelReward(_Base):
     """r_vel = v ⋅ dir_to_goal"""
     def _raw(self, env, **kw):
         p_r = np.array(env.world.drone.state.position)
-        v_r = np.array(env.world.drone.state.linear_vel)
+        v_r = np.array(env.world.drone.state.linear_velocity)
         dir_pg = env.goal_pos - p_r
         dir_pg /= (np.linalg.norm(dir_pg) + 1e-6)
         return np.dot(v_r, dir_pg)
