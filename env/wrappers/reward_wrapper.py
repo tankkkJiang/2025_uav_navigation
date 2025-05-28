@@ -399,6 +399,64 @@ class VelocityReward(RewardComponent):
 
         return velocity_reward
 
+# NavRL相关奖励设计    
+class StaticSafetyReward:
+    """静态安全：基于射线投射距离的平均对数（公式 9）"""
+    def __init__(self, name, weight):
+        self.name = name
+        self.weight = weight
+
+    def compute(self, env, **kwargs):
+        # env._ray_dirs & env.env_params['observation']['ray_length'] 在 NavRLEnv 中已初始化
+        origin = np.asarray(env.sim.drone.state.position)
+        dirs = env._ray_dirs
+        max_ray = env.env_params['observation']['ray_length']
+        dists = env.sim.scene.cast_rays(origin, dirs, max_ray)
+        # log 扩展远离障碍的奖励
+        return float(np.mean(np.log(dists + 1e-6)))
+
+
+class DynamicSafetyReward:
+    """动态安全：基于最近 N_d 个动态障碍的中心距离平均对数（公式 10）"""
+    def __init__(self, name, weight):
+        self.name = name
+        self.weight = weight
+
+    def compute(self, env, **kwargs):
+        origin = np.asarray(env.sim.drone.state.position)
+        # 返回 (N_d,9) 特征，dist 存在第 4 维
+        feats, _ = env.sim.scene.get_dynamic_nearest(origin, env.N_d)
+        dists = feats[:, 3]
+        return float(np.mean(np.log(dists + 1e-6)))
+
+
+class SmoothnessReward:
+    """平滑性惩罚：惩罚速度突变（公式 11）"""
+    def __init__(self, name, weight):
+        self.name = name
+        self.weight = weight
+
+    def compute(self, env, **kwargs):
+        vel = np.asarray(env.sim.drone.state.linear_velocity)
+        prev = getattr(env, 'prev_vel', np.zeros(3, dtype=np.float32))
+        diff = -float(np.linalg.norm(vel - prev))
+        env.prev_vel = vel.copy()
+        return diff
+
+
+class HeightPenaltyReward:
+    """高度惩罚：防止飞得过高（公式 12）"""
+    def __init__(self, name, weight):
+        self.name = name
+        self.weight = weight
+
+    def compute(self, env, **kwargs):
+        pos_z = env.sim.drone.state.position[2]
+        z0 = env.sim.drone.init_pos[2]
+        zg = env.sim.drone.target_position[2]
+        pen = - (min(abs(pos_z - z0), abs(pos_z - zg)) ** 2)
+        return float(pen)
+
 class TerminalReward(RewardComponent):
     def __init__(self, name, weight, arrival_reward=100.0, collision_penalty=-100.0):
         self.name = name

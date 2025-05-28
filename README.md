@@ -23,6 +23,8 @@ drone_navigation/                            # 项目根目录
 │       ├── real_scene.py                    # 真实建筑模型场景
 │       └── voxelized_random_scene.py        # 随机场景的体素化实现
 │   └── world.py                             # PyBullet初始化、场景构建、DroneAgent管理
+├── utils/
+│   ├── depth_feature_extractors.py          # 特征提取器
 ├── ppo_discrete_main.py                     
 └── train_ppo_discrete_rnn.py                
 ```
@@ -66,6 +68,17 @@ sim/world.py 是仿真总控台，统一管理场景与无人机。
 ###### sim/scenes/voxelized_random_scene.py — 体素化随机场景
 在随机场景的基础上，额外维护一个三维体素网格（voxel_map），标记所有障碍物占据的体素单元。
 
+### 2.3 奖励层
+
+#### 2.3.1 各份代码讲解
+首先关注`config/navigation_env_config.yaml`中的 `reward` 配置项，包含以下内容：
+1. **extra_rewards**：用来配置那些一次性、与回合终止条件（到达／碰撞）直接相关的奖励。
+2. **active_components**：列表中每一项的键名必须对应到 reward_wrapper.py 里的一个 RewardComponent 子类名；值就是它的权重 weight。
+
+
+#### 2.3.2 可扩展：加新奖惩
+1. 在 `reward_wrapper.py` 里新增一个继承自 `RewardComponent` 的类；
+2. 在 YAML 的 `active_components` 中放开注释、写上它的类名和权重。把其他权重进行修改。
 
 ## 3. 其他
 ### 深度图

@@ -1,5 +1,6 @@
 """
 env/trajectory_track_env.py
+轨迹跟踪环境
 """
 
 import gym
