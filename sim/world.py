@@ -11,6 +11,7 @@ import time
 
 from sim.agents import DroneAgent
 from sim.scenes import RandomScene, VoxelizedRandomScene, RealScene
+from sim.scenes.navrl_scene import NavRLScene
 
 class World:
     def __init__(self, use_gui, scene_type, scene_region, obstacle_params, drone_params, voxel_size=None, building_path=""):
@@ -94,6 +95,20 @@ class World:
                 max_height=self.obstacle_params["max_height"],
                 voxel_size=self.voxel_size
             )
+        elif self.scene_type == "navrl":
+            # 从 obstacle_params 中拆分静态／动态参数
+            params = dict(self.obstacle_params)  # 复制一份
+            dynamic_params = params.pop("dynamic", {})  # 拿出动态子字典
+            static_params = params  # 剩下的即静态配置
+
+            self.scene = NavRLScene(
+                scene_size_x=self.scene_size_x,
+                scene_size_y=self.scene_size_y,
+                scene_size_z=self.scene_size_z,
+                static_params=static_params,
+                dynamic_params=dynamic_params,
+                voxel_size=self.voxel_size
+            )
         else:
             raise ValueError(f"Unsupported scene_type: {self.scene_type}")
 
@@ -143,9 +158,13 @@ class World:
 
     def step(self, velocity, num_steps=30):
         is_collided = False
+        nearest_info = None
         collision_check_interval = 30
+        dt = 1.0 / 240.0
         for i in range(num_steps):
             p.resetBaseVelocity(self.drone.id, linearVelocity=velocity)
+            if hasattr(self.scene, 'step'):
+                self.scene.step(dt)
             p.stepSimulation()
             # time.sleep(1. / 240.)
             if i % collision_check_interval == 0:
