@@ -174,7 +174,7 @@ class NavRLEnv(gym.Env):
 
         # ----- 世界 → 目标坐标系 -----
         p_r_w = np.array(self.world.drone.state.position, dtype=np.float32)
-        v_r_w = np.array(self.world.drone.state.linear_vel, dtype=np.float32)
+        v_r_w = np.array(self.world.drone.state.linear_velocity, dtype=np.float32)
         # 位置、速度映射到 G
         p_r_g = self.R_w2g @ (p_r_w - self.start_pos)  # 3,
         v_r_g = self.R_w2g @ v_r_w  # 3,
