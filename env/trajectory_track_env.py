@@ -1,6 +1,6 @@
 """
 env/trajectory_track_env.py
-轨迹跟踪环境
+轨迹跟踪环境，无加入RL逻辑，可以测试环境
 """
 
 import gym

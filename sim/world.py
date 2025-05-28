@@ -14,7 +14,14 @@ from sim.scenes import RandomScene, VoxelizedRandomScene, RealScene
 from sim.scenes.navrl_scene import NavRLScene
 
 class World:
-    def __init__(self, use_gui, scene_type, scene_region, obstacle_params, drone_params, voxel_size=None, building_path=""):
+    def __init__(self,
+                 use_gui,
+                 scene_type,
+                 scene_region,
+                 obstacle_params,
+                 drone_params,
+                 voxel_size=None,
+                 building_path=""):
         self.use_gui = use_gui
 
         # 场景尺寸
