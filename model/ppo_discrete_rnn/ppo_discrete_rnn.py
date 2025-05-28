@@ -1,3 +1,8 @@
+"""
+model/ppo_discrete_rnn/ppo_discrete_rnn.py
+"""
+
+
 import torch
 import torch.nn as nn
 import numpy as np

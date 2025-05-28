@@ -1,3 +1,7 @@
+"""
+model/ppo_discrete_rnn/normalization
+"""
+
 import numpy as np
 
 

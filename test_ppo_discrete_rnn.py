@@ -1,3 +1,8 @@
+"""
+test_ppo_discrete_rnn.py
+用已经训练好的模型做纯评估／演示，不再更新网络。
+"""
+
 import torch
 import numpy as np
 import gym

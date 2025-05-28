@@ -1,5 +1,6 @@
 """
 train_ppo_discrete_rnn.py
+执行完整的 PPO 训练循环。
 """
 
 import torch
