@@ -227,7 +227,10 @@ class NavigationEnv(gym.Env):
         self.step_count += 1
 
         # === 1. 施加动作并推进仿真 ===
-        action = action.squeeze()
+        try:
+            action = action.squeeze()
+        except AttributeError:
+            pass
         velocity = self.compute_velocity_from_action(action)
         is_collided, nearest_info = self.sim.step(velocity, self._action_repeat)
         is_arrived = self.check_arrived()
