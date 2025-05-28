@@ -60,7 +60,7 @@ class World:
         camera_yaw = 45           # 绕竖直轴的水平旋转角度（度）
         camera_pitch = -45        # 绕水平方向（右轴）的俯仰角（度），负值表示俯视
         p.resetDebugVisualizerCamera(
-            cameraDistance=100,
+            cameraDistance=50,
             cameraYaw=camera_yaw,
             cameraPitch=camera_pitch,
             cameraTargetPosition=camera_target
