@@ -8,11 +8,11 @@ scene:
     size: 1.0
   obstacle:
     # ---- 静态障碍 ----
-    num_obstacles: 5
-    min_radius: 1.0
-    max_radius: 2.5
-    min_height: 2.0
-    max_height: 6.0
+    num_obstacles: 100
+    min_radius: 5
+    max_radius: 10
+    min_height: 60
+    max_height: 200
     # ---- 动态障碍 ----
     dynamic:
       num_obstacles: 0
@@ -22,12 +22,12 @@ scene:
       max_height: 2.0
       max_speed: 1.0      # m/s
   region:
-    x_min: -25   # 50m×50m 区域
-    x_max:  25
-    y_min: -25
-    y_max:  25
+    x_min: -250   # 50m×50m 区域 / 500m×500m 区域
+    x_max:  250
+    y_min: -250
+    y_max:  250
     z_min: 0
-    z_max: 10
+    z_max: 200
 
 # 目标采样区域（水平 50 m，固定 z）
 goal_region:
