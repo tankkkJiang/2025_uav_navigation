@@ -21,7 +21,7 @@ import logging
 def test(folder_path):
     # 自动识别文件路径
     env_config_path = os.path.join(folder_path, "config", "env_config.yaml")
-    ppo_config_path = os.path.join(folder_path, "config", "ppo_config.yaml")
+    ppo_config_path = os.path.join(folder_path, "config", "navigation_env_config.yaml")
     model_path =  os.path.join(folder_path, "models", "final_model.zip")
     
     # 读取 YAML 配置
