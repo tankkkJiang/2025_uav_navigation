@@ -22,7 +22,7 @@ scene:
       max_radius: 10
       min_height: 60
       max_height: 200
-      max_speed: 1.0      # m/s
+      max_speed: 10.0      # m/s
   region:
     x_min: -250   # 50m×50m 区域 / 500m×500m 区域
     x_max:  250
