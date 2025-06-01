@@ -25,6 +25,8 @@ def load_env(gui: bool = True) -> NavRLEnv:
     with open("config/navrl_env_config.yaml", "r", encoding="utf-8") as f:
         cfg: Dict = yaml.safe_load(f)
     cfg["use_gui"] = gui                             # 强制开启 GUI
+
+    print("[load_env] 环境创建完毕，use_gui =", cfg["use_gui"])
     return NavRLEnv(cfg)
 
 def draw_circle(center: np.ndarray, radius: float = 0.3, color=(0,1,0), segments: int = 36):
@@ -46,12 +48,14 @@ def mark_start_goal(env: NavRLEnv):
     # 标字，文字大小仅示意
     p.addUserDebugText("Ps", Ps + np.array([0,0,0.5]), textColorRGB=[0,1,0], textSize=1.2, lifeTime=0)
     p.addUserDebugText("Pg", Pg + np.array([0,0,0.5]), textColorRGB=[1,0,0], textSize=1.2, lifeTime=0)
+    print(f"[mark_start_goal] 已在 GUI 上可视化 Ps={Ps} 和 Pg={Pg}")
 
 def build_agent(env: NavRLEnv, model_path: str) -> PPO_continuous_RNN:
     """根据保存目录里的 ppo_config.yaml 恢复超参并加载权重"""
     # ----- 1) 还原超参数 -----
     run_dir  = os.path.dirname(os.path.dirname(model_path))  # logs/.../models -> logs/...
     ppo_cfg_file = os.path.join(run_dir, "config/ppo_config.yaml")
+    print(f"[build_agent] 将读取 PPO 配置文件：{ppo_cfg_file}")
     if not os.path.exists(ppo_cfg_file):
         raise FileNotFoundError(f"未找到对应的 ppo_config.yaml: {ppo_cfg_file}")
 
@@ -70,6 +74,7 @@ def build_agent(env: NavRLEnv, model_path: str) -> PPO_continuous_RNN:
 
     # ----- 2) 创建 agent & 加载权重 -----
     agent = PPO_continuous_RNN(args)
+    print(f"[build_agent] 加载模型权重：{model_path}")
     checkpoint = torch.load(model_path, map_location=args.device)
     agent.ac.load_state_dict(checkpoint["ac"])
     agent.ac.eval()
@@ -85,6 +90,7 @@ def random_play(env: NavRLEnv, hz: int = 30):
     try:
         while True:
             obs, _ = env.reset()
+            print(f"[random_play] Episode {ep + 1} 重置完成: start_pos={env.start_pos}, goal_pos={env.goal_pos}")
             if env.world.use_gui:
                 mark_start_goal(env)
 
@@ -109,6 +115,7 @@ def policy_play(env: NavRLEnv, agent: PPO_continuous_RNN, hz: int = 30):
     try:
         while True:
             obs, _ = env.reset()
+            print(f"[policy_play] Episode {ep + 1} 重置完成: start_pos={env.start_pos}, goal_pos={env.goal_pos}")
             if env.world.use_gui:
                 mark_start_goal(env)
 
