@@ -18,6 +18,10 @@ from model.ppo_continuous_rnn.normalization import Normalization       # 仅播�
 # ------------------------------ Utils ------------------------------
 def load_env(gui: bool = True) -> NavRLEnv:
     """读取 YAML 并创建带 GUI 的 NavRLEnv"""
+    config_path = "config/navrl_env_config.yaml"
+    print(f"[load_env] 即将读取配置文件：{config_path}")
+    print(f"[load_env] 传入的 gui 参数 = {gui}")
+
     with open("config/navrl_env_config.yaml", "r", encoding="utf-8") as f:
         cfg: Dict = yaml.safe_load(f)
     cfg["use_gui"] = gui                             # 强制开启 GUI
