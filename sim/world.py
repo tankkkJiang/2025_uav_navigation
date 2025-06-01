@@ -11,6 +11,7 @@ import time
 
 from sim.agents import DroneAgent
 from sim.scenes import RandomScene, VoxelizedRandomScene, RealScene
+from sim.scenes.voxelized_dynamic_scene import DynamicVoxelizedScene
 from sim.scenes.navrl_scene import NavRLScene
 
 class World:
@@ -91,17 +92,35 @@ class World:
                 building_path=self.building_path
             )
         elif self.scene_type == "voxelized":
-            self.scene = VoxelizedRandomScene(
-                scene_size_x=self.scene_size_x,
-                scene_size_y=self.scene_size_y,
-                scene_size_z=self.scene_size_z,
-                num_obstacles=self.obstacle_params["num_obstacles"],
-                min_radius=self.obstacle_params["min_radius"],
-                max_radius=self.obstacle_params["max_radius"],
-                min_height=self.obstacle_params["min_height"],
-                max_height=self.obstacle_params["max_height"],
-                voxel_size=self.voxel_size
-            )
+            # === 拆分静态 / 动态参数 ===
+            voxel_params = {"size": self.voxel_size}
+            params = dict(self.obstacle_params)  # 深拷贝
+            dyn_cfg = params.pop("dynamic", None)  # 可能为空
+            static_cfg = params  # 剩下的是静态
+
+            if dyn_cfg and dyn_cfg.get("num_obstacles", 0) > 0:
+                # ---- 含动态障碍 ----
+                self.scene = DynamicVoxelizedScene(
+                    scene_size_x=self.scene_size_x,
+                    scene_size_y=self.scene_size_y,
+                    scene_size_z=self.scene_size_z,
+                    voxel_params=voxel_params,
+                    static_params=static_cfg,
+                    dynamic_params=dyn_cfg
+                )
+            else:
+                self.scene = VoxelizedRandomScene(
+                    scene_size_x=self.scene_size_x,
+                    scene_size_y=self.scene_size_y,
+                    scene_size_z=self.scene_size_z,
+                    num_obstacles=self.obstacle_params["num_obstacles"],
+                    min_radius=self.obstacle_params["min_radius"],
+                    max_radius=self.obstacle_params["max_radius"],
+                    min_height=self.obstacle_params["min_height"],
+                    max_height=self.obstacle_params["max_height"],
+                    voxel_size=self.voxel_size
+                )
+
         elif self.scene_type == "navrl":
             # 从 obstacle_params 中拆分静态／动态参数
             params = dict(self.obstacle_params)  # 复制一份

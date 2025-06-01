@@ -10,6 +10,7 @@ from gym import spaces
 import numpy as np
 import logging
 import ast
+import pybullet as p
 
 from sim.world import World
 from env.wrappers.navrl_reward_wrapper import (

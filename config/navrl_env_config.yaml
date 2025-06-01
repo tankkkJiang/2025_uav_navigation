@@ -17,7 +17,7 @@ scene:
     max_height: 200
     # ---- 动态障碍 ----
     dynamic:
-      num_obstacles: 0
+      num_obstacles: 0    # 只要 >0 就会启用 DynamicVoxelizedScene
       min_radius: 0.6
       max_radius: 1.2
       min_height: 1.0
