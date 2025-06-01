@@ -6,6 +6,8 @@ scene:
   type: voxelized           # World 会自动选择 NavRLScene
   voxel:
     size: 1.0
+  map:
+    building_path: "assets/building/building.obj" # 建筑物模型路径
   obstacle:
     # ---- 静态障碍 ----
     num_obstacles: 100
