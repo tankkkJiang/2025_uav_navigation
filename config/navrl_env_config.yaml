@@ -1,9 +1,9 @@
 # -------------------- 基础 --------------------
-use_gui: False          # 训练阶段通常不开 GUI
+use_gui: True          # 训练阶段通常不开 GUI
 
 # 场景 -------------------------------------------------
 scene:
-  type: navrl           # World 会自动选择 NavRLScene
+  type: voxelized           # World 会自动选择 NavRLScene
   voxel:
     size: 1.0
   obstacle:
