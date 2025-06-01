@@ -99,8 +99,8 @@ class NavRLEnv(gym.Env):
         self.prev_vel = np.zeros(3, dtype=np.float32)
 
         # 随机目标
-        self.start_pos  = np.array(self.world.drone.state.position)
-        self.goal_pos   = self._sample_goal()
+        self.start_pos = np.array(self.world.drone.state.position, dtype=np.float32)
+        self.goal_pos = self._sample_goal()  # _sample_goal 内部会设置 self.world.drone.target_position
 
         # 在目标/世界坐标系之间构造旋转矩阵
         gx    = self.goal_pos - self.start_pos
@@ -151,43 +151,68 @@ class NavRLEnv(gym.Env):
     # ------------------------------------------------------------------
     # 内部工具
     # ------------------------------------------------------------------
-    # 目标生成（50m×50m）
-    def _sample_goal(self):
+    def _sample_goal(self) -> np.ndarray:
         """
         目标生成逻辑：
         • 空间上：在 scene.region 立方体内随机采样
-        • 安全上：确保目标与任意障碍保持 ≥10 m 距离，否则重采
+        • 安全上：确保候选点与所有障碍保持 ≥10m，否则重采
+
+        返回：
+            numpy.ndarray, dtype=float32, shape=(3,) — 最终确定的 (x,y,z)
         """
+        threshold = 10.0
         region = self.world.scene_region
         while True:
+            # 1) 随机采一个候选位置 (x,y,z)
             x = np.random.uniform(region["x_min"], region["x_max"])
             y = np.random.uniform(region["y_min"], region["y_max"])
             z = np.random.uniform(region["z_min"], region["z_max"])
-            self.world.drone.target_position = [x, y, z]
+            candidate = np.array([x, y, z], dtype=np.float32)
 
-            # 检查与障碍的距离阈值（10m）
-            is_collided, _ = self.world.drone.check_collision(threshold=10.0)
-            if not is_collided:
-                logging.info("🚁 目标位置安全，无碰撞")
-                return np.array([x, y, z], dtype=np.float32)
-            else:
-                logging.warning("🚨 目标位置与障碍物过近，重新生成")
+            # 2) 检查与“所有静态障碍”之间的距离
+            too_close = False
 
+            # 静态障碍： self.world.scene.static_ids
+            for body_id in getattr(self.world.scene, "static_ids", []):
+                pos_obs, _ = p.getBasePositionAndOrientation(body_id)
+                dist = np.linalg.norm(candidate - np.array(pos_obs, dtype=np.float32))
+                if dist < threshold:
+                    too_close = True
+                    logging.warning(f"🚨 候选目标与静态障碍 [ID:{body_id}] 距离 {dist:.2f}m < {threshold}m，重采")
+                    break
 
-    def check_arrived(self, arrival_threshold=5.0):
+            if too_close:
+                continue
+
+            # 动态障碍： self.world.scene.dynamic_obs 中每个 dict 有 'body'
+            for dyn in getattr(self.world.scene, "dynamic_obs", []):
+                body_id = dyn["body"]
+                pos_dyn, _ = p.getBasePositionAndOrientation(body_id)
+                dist = np.linalg.norm(candidate - np.array(pos_dyn, dtype=np.float32))
+                if dist < threshold:
+                    too_close = True
+                    logging.warning(f"🚨 候选目标与动态障碍 [ID:{body_id}] 距离 {dist:.2f}m < {threshold}m，重采")
+                    break
+
+            if too_close:
+                continue
+
+            # 3) 如果合格，则写入无人机的 target_position，并返回
+            self.world.drone.target_position = candidate.tolist()
+            logging.info(f"🚁 目标位置确认：{candidate.tolist()}，与所有障碍的距离 ≥ {threshold}m")
+            return candidate
+
+    def check_arrived(self, arrival_threshold: float = 5.0) -> bool:
         """
-        检查是否到达目标点附近。
+        检查无人机是否到达目标点（距离 ≤ arrival_threshold）。
 
-        参数：
-            arrival_threshold: 到达目标的距离阈值
-
-        返回：
-            bool: 如果到达目标附近，返回 True；否则返回 False
+        返回:
+            bool — 如果离目标距离 ≤ arrival_threshold，就算到达。
         """
-        distance_to_target = np.linalg.norm(
-            np.array(self.world.drone.state.position) - np.array(self.world.drone.target_position)
-        )
-        return distance_to_target <= arrival_threshold  # 如果距离小于阈值，认为到达目标
+        curr_pos   = np.array(self.world.drone.state.position, dtype=np.float32)
+        target_pos = np.array(self.world.drone.target_position, dtype=np.float32)
+        dist = np.linalg.norm(curr_pos - target_pos)
+        return (dist <= arrival_threshold)
 
     # ------------------------------------------------------------
     # 观测
