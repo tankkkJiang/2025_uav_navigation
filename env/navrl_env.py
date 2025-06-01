@@ -128,7 +128,7 @@ class NavRLEnv(gym.Env):
         collided, _ = self.world.step(v_w, num_steps=self.action_repeat)
 
         self.step_cnt += 1
-        arrived  = self._check_arrived()
+        arrived  = self.check_arrived()
         timeout  = self.step_cnt >= self.max_steps
         done = collided or arrived or timeout
 
@@ -153,18 +153,41 @@ class NavRLEnv(gym.Env):
     # ------------------------------------------------------------------
     # 目标生成（50m×50m）
     def _sample_goal(self):
-        region = self.cfg["goal_region"]         # {x_min,x_max,y_min,y_max,z}
-        x = np.random.uniform(region["x_min"], region["x_max"])
-        y = np.random.uniform(region["y_min"], region["y_max"])
-        z = region.get("z", 1.5)
-        self.world.drone.target_position = [x, y, z]
-        return np.array([x, y, z], dtype=np.float32)
+        """
+        目标生成逻辑：
+        • 空间上：在 scene.region 立方体内随机采样
+        • 安全上：确保目标与任意障碍保持 ≥10 m 距离，否则重采
+        """
+        region = self.world.scene_region
+        while True:
+            x = np.random.uniform(region["x_min"], region["x_max"])
+            y = np.random.uniform(region["y_min"], region["y_max"])
+            z = np.random.uniform(region["z_min"], region["z_max"])
+            self.world.drone.target_position = [x, y, z]
 
-    # 到达判定
-    def _check_arrived(self, thr=1.0):
-        p   = np.array(self.world.drone.state.position)
-        dis = np.linalg.norm(p - self.goal_pos)
-        return dis <= thr
+            # 检查与障碍的距离阈值（10m）
+            is_collided, _ = self.world.drone.check_collision(threshold=10.0)
+            if not is_collided:
+                logging.info("🚁 目标位置安全，无碰撞")
+                return np.array([x, y, z], dtype=np.float32)
+            else:
+                logging.warning("🚨 目标位置与障碍物过近，重新生成")
+
+
+    def check_arrived(self, arrival_threshold=5.0):
+        """
+        检查是否到达目标点附近。
+
+        参数：
+            arrival_threshold: 到达目标的距离阈值
+
+        返回：
+            bool: 如果到达目标附近，返回 True；否则返回 False
+        """
+        distance_to_target = np.linalg.norm(
+            np.array(self.world.drone.state.position) - np.array(self.world.drone.target_position)
+        )
+        return distance_to_target <= arrival_threshold  # 如果距离小于阈值，认为到达目标
 
     # ------------------------------------------------------------
     # 观测
