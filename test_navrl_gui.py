@@ -46,8 +46,8 @@ def mark_start_goal(env: NavRLEnv):
     draw_circle(Ps, radius=0.3, color=(0,1,0))
     draw_circle(Pg, radius=0.3, color=(1,0,0))
     # 标字，文字大小仅示意
-    p.addUserDebugText("Ps", Ps + np.array([0,0,0.5]), textColorRGB=[0,1,0], textSize=1.2, lifeTime=0)
-    p.addUserDebugText("Pg", Pg + np.array([0,0,0.5]), textColorRGB=[1,0,0], textSize=1.2, lifeTime=0)
+    p.addUserDebugText("Ps", Ps + np.array([0,0,0.5]), textColorRGB=[0,1,0], textSize=1.5, lifeTime=0)
+    p.addUserDebugText("Pg", Pg + np.array([0,0,0.5]), textColorRGB=[1,0,0], textSize=1.5, lifeTime=0)
     print(f"[mark_start_goal] 已在 GUI 上可视化 Ps={Ps} 和 Pg={Pg}")
 
 def build_agent(env: NavRLEnv, model_path: str) -> PPO_continuous_RNN:
