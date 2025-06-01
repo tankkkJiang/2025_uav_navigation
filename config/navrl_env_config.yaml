@@ -10,7 +10,7 @@ scene:
     building_path: "assets/building/building.obj" # 建筑物模型路径
   obstacle:
     # ---- 静态障碍 ----
-    num_obstacles: 100
+    num_obstacles: 2
     min_radius: 5
     max_radius: 10
     min_height: 60
