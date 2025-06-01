@@ -31,14 +31,6 @@ scene:
     z_min: 0
     z_max: 200
 
-# 目标采样区域（水平 50 m，固定 z）
-goal_region:
-  x_min: -25
-  x_max:  25
-  y_min: -25
-  y_max:  25
-  z: 1.5
-
 # 无人机 ------------------------------------------------
 drone:
   init_pos: random
