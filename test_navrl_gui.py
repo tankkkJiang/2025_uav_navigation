@@ -27,6 +27,20 @@ def load_env(gui: bool = True) -> NavRLEnv:
     cfg["use_gui"] = gui                             # 强制开启 GUI
 
     print("[load_env] 环境创建完毕，use_gui =", cfg["use_gui"])
+
+    env = NavRLEnv(cfg)
+    scene_cfg = cfg["scene"]
+    obs_cfg = scene_cfg["obstacle"]
+    scene_type = scene_cfg["type"]
+    num_static = obs_cfg.get("num_obstacles", 0)
+    dynamic_cfg = obs_cfg.get("dynamic", {})
+    num_dynamic = dynamic_cfg.get("num_obstacles", 0)
+    print(f"[load_env] 读取到 scene.type = {scene_type}")
+    print(f"[load_env] 静态障碍数量 = {num_static}，动态障碍数量 = {num_dynamic}")
+    # 如果是 voxelized 且启用了动态，则实际使用的类应该是 DynamicVoxelizedScene
+    actual_scene = env.world.scene.__class__.__name__
+    print(f"[load_env] 实际创建的 Scene 类 = {actual_scene}")
+
     return NavRLEnv(cfg)
 
 def draw_circle(center: np.ndarray, radius: float = 0.3, color=(0,1,0), segments: int = 36):
