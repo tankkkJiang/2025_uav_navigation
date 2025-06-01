@@ -30,6 +30,8 @@ def test(folder_path):
     with open(ppo_config_path, "r") as f:
         ppo_config = yaml.safe_load(f)
 
+    print(f"[test] 从 env_config.yaml 里读取到 use_gui = {env_config.get('use_gui')}")
+
     # 转为 Namespace 格式
     args = argparse.Namespace(**ppo_config)
     # 初始化环境
