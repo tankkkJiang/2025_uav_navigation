@@ -1,5 +1,5 @@
 # -------------------- 基础 --------------------
-use_gui: True          # 训练阶段通常不开 GUI
+use_gui: False          # 训练阶段通常不开 GUI
 
 # 场景 -------------------------------------------------
 scene:
@@ -10,7 +10,7 @@ scene:
     building_path: "assets/building/building.obj" # 建筑物模型路径
   obstacle:
     # ---- 静态障碍 ----
-    num_obstacles: 5
+    num_obstacles: 100
     min_radius: 5
     max_radius: 10
     min_height: 60

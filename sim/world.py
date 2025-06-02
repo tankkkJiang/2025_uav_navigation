@@ -121,20 +121,6 @@ class World:
                     voxel_size=self.voxel_size
                 )
 
-        elif self.scene_type == "navrl":
-            # 从 obstacle_params 中拆分静态／动态参数
-            params = dict(self.obstacle_params)  # 复制一份
-            dynamic_params = params.pop("dynamic", {})  # 拿出动态子字典
-            static_params = params  # 剩下的即静态配置
-
-            self.scene = NavRLScene(
-                scene_size_x=self.scene_size_x,
-                scene_size_y=self.scene_size_y,
-                scene_size_z=self.scene_size_z,
-                static_params=static_params,
-                dynamic_params=dynamic_params,
-                voxel_size=self.voxel_size
-            )
         else:
             raise ValueError(f"Unsupported scene_type: {self.scene_type}")
 

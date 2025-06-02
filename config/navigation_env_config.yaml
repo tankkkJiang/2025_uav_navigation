@@ -11,14 +11,6 @@ scene:
     max_radius: 10 # 障碍物最大半径
     min_height: 60 # 障碍物最小高度
     max_height: 200 # 障碍物最大高度
-    # ---- 动态障碍 ----
-    dynamic:
-      num_obstacles: 10    # 只要 >0 就会启用 DynamicVoxelizedScene
-      min_radius: 5
-      max_radius: 10
-      min_height: 60
-      max_height: 200
-      max_speed: 2.0      # m/s
   region:
     x_min: -250
     x_max: 250

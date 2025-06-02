@@ -16,14 +16,14 @@ drone_navigation/                            # 项目根目录
 │   │   ├── navrl_reward_wrapper.py
 │   │   └── reward_wrapper.py                # 各种奖励组件的实现
 │   ├── navigation_env.py                    # 基于Gym封装的导航环境
-│   ├── navrl_env.py                         # 复现的导航环境
+│   ├── navrl_env.py                         # NavRL导航环境
 │   └── trajectory_track_env.py              # 基于Gym封装的轨迹跟踪环境
 ├── sim/
 │   ├── agents/
 │   │   └── drone_agent.py                   # 无人机Agent：状态管理、物理控制、深度图获取
 │   └── scenes/
 │       ├── random_scene.py                  # 随机障碍物场景
-│       ├── navrl_scene.py                   # 复现的导航场景
+│       ├── voxelized_dynamic_scene.py       # 静态+动态障碍物场景的体素化实现
 │       ├── real_scene.py                    # 真实建筑模型场景
 │       └── voxelized_random_scene.py        # 随机场景的体素化实现
 │   └── world.py                             # PyBullet初始化、场景构建、DroneAgent管理
@@ -117,3 +117,11 @@ resent：利用resnet18与训练网络将深度图转为维度为25的tensor。
 
 ### 4.3 体素版
 体素版的核心目的是用离散、规则的三维网格来替代“点、线、面”形式的稀疏几何，既能大幅度提高对静态障碍的查询速度，也方便与深度学习模型对接。
+
+### 4.4 动态障碍物
+默认情况下，PyBullet 里任何两个带碰撞体的刚体都会发生碰撞检测并产生碰撞响应（如果都是质量大于 0，则还会产生真实的物理反弹等）。
+
+静态障碍与动态障碍默认是可以互相碰撞的，在物理仿真里会报 contact，但因为都为零质量，视觉上看不出实质挤压。在每帧的物理仿真中，动态障碍体（也是零质量）会被我们通过 _update_dyn 强制更新位置。
+
+每隔若干个 PyBullet stepSimulation() 之后，就会检查一遍 self.scene.step(dt)，从而把所有动态障碍更新最新位置。再之后根据 self.drone.check_collision() 来判断无人机是否与任意障碍物（静态或动态）产生碰撞。
+
