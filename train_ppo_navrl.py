@@ -21,36 +21,52 @@ class Runner:
         self.args, self.seed = args, seed
 
         # === 1) 读取环境配置 ===
-        with open("config/navrl_env_config.yaml", "r", encoding="utf-8") as f:
+        config_path = "config/navrl_env_config.yaml"
+        logging.info(f"Reading environment config from: {config_path}")
+        with open(config_path, "r", encoding="utf-8") as f:
             env_cfg = yaml.safe_load(f)
+        logging.info(f"Environment config loaded:\n{yaml.dump(env_cfg)}")
 
         # === 2) 生成 run 名称 & 路径 ===
         algo   = "ppo_continuous_rnn"
         t_str  = datetime.now().strftime("%m%d_%H%M%S")
         self.run_name = f"{algo}_s{seed}_{t_str}"
+        logging.info(f"Run name: {self.run_name}")
 
         self.log_dir    = os.path.join("logs", self.run_name)
         self.model_dir  = os.path.join(self.log_dir, "models")
         self.config_dir = os.path.join(self.log_dir, "config")
+        logging.info(f"Log directory: {self.log_dir}")
+        logging.info(f"Model directory: {self.model_dir}")
+        logging.info(f"Config directory: {self.config_dir}")
+
         for d in [self.log_dir, self.model_dir, self.config_dir]:
             os.makedirs(d, exist_ok=True)
 
         # === 3) 纯文件日志 ===
+        log_file = os.path.join(self.log_dir, "train.log")
         logging.basicConfig(
-            filename=os.path.join(self.log_dir, "train.log"),
+            filename=log_file,
             filemode="w",
             level=logging.INFO,
             format="[%(levelname)s] %(asctime)s - %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
+        logging.info(f"Logging to file: {log_file}")
 
         # === 4) 保存配置到 log 目录 ===
-        with open(os.path.join(self.config_dir, "env_config.yaml"), "w", encoding="utf-8") as f:
+        env_config_out = os.path.join(self.config_dir, "env_config.yaml")
+        ppo_config_out = os.path.join(self.config_dir, "ppo_config.yaml")
+        with open(env_config_out, "w", encoding="utf-8") as f:
             yaml.dump(env_cfg, f)
-        with open(os.path.join(self.config_dir, "ppo_config.yaml"), "w", encoding="utf-8") as f:
+        logging.info(f"Saved environment config to: {env_config_out}")
+        with open(ppo_config_out, "w", encoding="utf-8") as f:
             yaml.dump(vars(args), f)
+        logging.info(f"Saved PPO config to: {ppo_config_out}")
+        logging.info(f"PPO hyperparameters:\n{yaml.dump(vars(args))}")
 
         # === 5) wandb ===
+        logging.info("Initializing Weights & Biases")
         wandb.init(
             project="drone_navigation",
             name=self.run_name,
@@ -59,24 +75,33 @@ class Runner:
         )
 
         # === 6) 创建环境 & 随机种子 ===
+        logging.info("Creating NavRLEnv with provided configuration")
         self.env = NavRLEnv(env_cfg)
+        logging.info(f"NavRLEnv observation_space: {self.env.observation_space}")
+        logging.info(f"NavRLEnv action_space: {self.env.action_space}")
         np.random.seed(seed)
         torch.manual_seed(seed)
         self.env.reset(seed=seed)
         self.env.action_space.seed(seed)
+        logging.info("Environment reset with seed; initial observation obtained")
+
 
         # === 7) 根据环境补充超参 ===
         args.state_dim   = self.env.observation_space.shape[0]
         args.action_dim  = self.env.action_space.shape[0]        # 连续 3 维
         args.episode_limit = self.env.max_steps
+        logging.info(f"Derived state_dim: {args.state_dim}, action_dim: {args.action_dim}, episode_limit: {args.episode_limit}")
 
         # === 8) Buffer / Agent ===
         self.buffer = ReplayBuffer(args)
         self.agent  = PPO_continuous_RNN(args)
+        logging.info("ReplayBuffer and agent initialized")
 
         if args.use_state_norm:
+            logging.info("Using state normalization")
             self.state_norm = Normalization(shape=args.state_dim)
         if args.use_reward_scaling:
+            logging.info("Using reward scaling")
             self.reward_scaling = RewardScaling(shape=1, gamma=args.gamma)
 
         self.total_steps = 0
@@ -84,6 +109,7 @@ class Runner:
 
     # ---------------------- 主训练循环 -------------------------
     def run(self):
+        logging.info("Starting main training loop")
         episode_total = success_n = collision_n = other_n = 0
         while self.total_steps < self.args.max_train_steps:
 
@@ -94,9 +120,12 @@ class Runner:
             elif info["collision"]: collision_n += 1
             else:                 other_n     += 1
 
+            success_rate = success_n / episode_total
+            collision_rate = collision_n / episode_total
+            logging.info(f"Episode {episode_total}: success_rate={success_rate:.3f}, collision_rate={collision_rate:.3f}")
             wandb.log({
-                "train/success_rate":   success_n/episode_total,
-                "train/collision_rate": collision_n/episode_total
+                "train/success_rate": success_rate,
+                "train/collision_rate": collision_rate
             }, step=self.total_steps)
 
             # buffer 满一 batch 就更新
@@ -124,6 +153,7 @@ class Runner:
     # ---------------------- 单回合 -----------------------------
     def run_episode(self):
         s, _ = self.env.reset()
+        logging.info("Episode reset; initial observation obtained")
         if self.args.use_reward_scaling: self.reward_scaling.reset()
         if self.args.use_state_norm: s = self.state_norm(s)
         self.agent.reset_rnn()
@@ -142,7 +172,9 @@ class Runner:
 
             s = s2
             if self.args.use_state_norm: s = self.state_norm(s)
-            if done: break
+            if done:
+                logging.info(f"Episode done at step {t + 1} with reward {ep_reward:.3f}, info={info}")
+                break
 
         v_last = self.agent.get_value(s)
         self.buffer.store_last_value(t+1, v_last)
