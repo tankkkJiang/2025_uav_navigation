@@ -96,7 +96,7 @@ def build_agent(env: NavRLEnv, model_path: str) -> PPO_continuous_RNN:
     return agent
 
 # --------------------------- Main Loop -----------------------------
-def random_play(env: NavRLEnv, hz: int = 30, print_freq: int = 1):
+def random_play(env: NavRLEnv, hz: int = 30, print_freq: int = 10):
     """无模型随机动作，可视化"""
     print(">>> 随机动作测试，按 Ctrl+C 终止 ...")
     dt = 1.0 / hz
