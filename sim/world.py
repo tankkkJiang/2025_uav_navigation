@@ -13,6 +13,7 @@ from sim.agents import DroneAgent
 from sim.scenes import RandomScene, VoxelizedRandomScene, RealScene
 from sim.scenes.voxelized_dynamic_scene import DynamicVoxelizedScene
 
+
 class World:
     def __init__(self,
                  use_gui,
