@@ -165,7 +165,7 @@ if __name__ == "__main__":
                         help="模型权重路径 (.pt). 为空则随机动作。")
     parser.add_argument("--hz", type=int, default=30,
                         help="可视化 step 频率(Hz)")
-    parser.add_argument("--print_freq", type=int, default=1,
+    parser.add_argument("--print_freq", type=int, default=100,
                         help = "每隔多少步打印一次动作与观测 (1 表示每步都打印，0 表示不打印)")
     args = parser.parse_args()
 
