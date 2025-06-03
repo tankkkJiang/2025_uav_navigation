@@ -33,7 +33,9 @@ class Runner:
         self.run_name = f"{algo}_s{seed}_{t_str}"
         logging.info(f"Run name: {self.run_name}")
 
-        self.log_dir    = os.path.join("logs", self.run_name)
+        # 所有输出都放到 result/{run_name} 下
+        base_dir = "result"
+        self.log_dir = os.path.join(base_dir, self.run_name)
         self.model_dir  = os.path.join(self.log_dir, "models")
         self.config_dir = os.path.join(self.log_dir, "config")
         logging.info(f"Log directory: {self.log_dir}")
@@ -146,9 +148,9 @@ class Runner:
                         logging.info(f"✔ Saved model to {path}")
 
         # 训练完保存最终模型
-        path = os.path.join(self.model_dir, "final_model.pt")
-        torch.save({'ac': self.agent.ac.state_dict()}, path)
-        logging.info(f"✔ Saved final model to {path}")
+        final_path = os.path.join(self.model_dir, "final_model.pt")
+        torch.save({'ac': self.agent.ac.state_dict()}, final_path)
+        logging.info(f"✔ Saved final model to {final_path}")
 
     # ---------------------- 单回合 -----------------------------
     def run_episode(self):

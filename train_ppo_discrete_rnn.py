@@ -1,6 +1,16 @@
 """
 train_ppo_discrete_rnn.py
 执行完整的 PPO 训练循环。
+
+result/
+└── ppo_discrete_rnn_s0_0603_210000/
+    ├── train.log
+    ├── wandb/                ← WandB 的本地缓存和事件文件夹
+    ├── models/
+    │   ├── model_update_20.zip
+    │   ├── model_update_40.zip
+    │   └── … （每隔 20 次 eval 保存一次）
+    └── └── final_model.zip    ← 训练结束后的最终权重
 """
 
 import torch

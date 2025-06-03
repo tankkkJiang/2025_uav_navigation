@@ -41,7 +41,7 @@ def load_env(gui: bool = True) -> NavRLEnv:
     actual_scene = env.world.scene.__class__.__name__
     print(f"[load_env] 实际创建的 Scene 类 = {actual_scene}")
 
-    return NavRLEnv(cfg)
+    return env
 
 def draw_circle(center: np.ndarray, radius: float = 0.3, color=(0,1,0), segments: int = 36):
     """在 PyBullet GUI 中画一个圆圈"""
@@ -96,11 +96,12 @@ def build_agent(env: NavRLEnv, model_path: str) -> PPO_continuous_RNN:
     return agent
 
 # --------------------------- Main Loop -----------------------------
-def random_play(env: NavRLEnv, hz: int = 30):
+def random_play(env: NavRLEnv, hz: int = 30, print_freq: int = 1):
     """无模型随机动作，可视化"""
     print(">>> 随机动作测试，按 Ctrl+C 终止 ...")
     dt = 1.0 / hz
     ep = 0
+    step_freq = print_freq if print_freq > 0 else float("inf")
     try:
         while True:
             obs, _ = env.reset()
@@ -110,9 +111,14 @@ def random_play(env: NavRLEnv, hz: int = 30):
 
             terminated = False
             ep += 1
+            step_cnt = 0
             while not terminated:
                 a = env.action_space.sample()
                 obs, r, terminated, info = env.step(a)
+                # 如果 step_cnt % print_freq == 0，则打印当前步的 obs 和 action
+                if step_cnt % step_freq == 0:
+                    print(f"[random_play][Ep {ep}][Step {step_cnt}] action={a}, obs={obs}")
+                step_cnt += 1
                 time.sleep(dt)
             print(f"[Episode {ep}] 结束 | arrival={info['arrival']}  collision={info['collision']}")
     except KeyboardInterrupt:
@@ -120,12 +126,13 @@ def random_play(env: NavRLEnv, hz: int = 30):
     finally:
         env.close()
 
-def policy_play(env: NavRLEnv, agent: PPO_continuous_RNN, hz: int = 30):
+def policy_play(env: NavRLEnv, agent: PPO_continuous_RNN, hz: int = 30, print_freq: int = 1):
     """加载模型后回放，可视化"""
     print(">>> 策略回放，按 Ctrl+C 终止 ...")
     # 如果训练时用了状态归一化，可自行选择是否加载均值方差；此处简单关闭
     dt = 1.0 / hz
     ep = 0
+    step_freq = print_freq if print_freq > 0 else float("inf")
     try:
         while True:
             obs, _ = env.reset()
@@ -136,9 +143,14 @@ def policy_play(env: NavRLEnv, agent: PPO_continuous_RNN, hz: int = 30):
             agent.reset_rnn()
             terminated = False
             ep += 1
+            step_cnt = 0
             while not terminated:
                 a, _ = agent.choose_action(obs, evaluate=True)
                 obs, r, terminated, info = env.step(a)
+                # 如果 step_cnt % print_freq == 0，则打印当前步的 obs 和 action
+                if step_cnt % step_freq == 0:
+                    print(f"[policy_play][Ep {ep}][Step {step_cnt}] action={a}, obs={obs}")
+                step_cnt += 1
                 time.sleep(dt)
             print(f"[Episode {ep}] 结束 | arrival={info['arrival']}  collision={info['collision']}")
     except KeyboardInterrupt:
@@ -153,6 +165,8 @@ if __name__ == "__main__":
                         help="模型权重路径 (.pt). 为空则随机动作。")
     parser.add_argument("--hz", type=int, default=30,
                         help="可视化 step 频率(Hz)")
+    parser.add_argument("--print_freq", type=int, default=1,
+                        help = "每隔多少步打印一次动作与观测 (1 表示每步都打印，0 表示不打印)")
     args = parser.parse_args()
 
     # 1. 创建带 GUI 的环境
@@ -160,9 +174,9 @@ if __name__ == "__main__":
 
     # 2. 随机 or 模型
     if args.model is None:
-        random_play(env, hz=args.hz)
+        random_play(env, hz=args.hz, print_freq=args.print_freq)
     else:
         if not os.path.isfile(args.model):
             raise FileNotFoundError(f"模型文件不存在: {args.model}")
         agent = build_agent(env, args.model)
-        policy_play(env, agent, hz=args.hz)
+        policy_play(env, agent, hz=args.hz, print_freq=args.print_freq)
