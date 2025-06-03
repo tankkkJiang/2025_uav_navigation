@@ -10,14 +10,14 @@ scene:
     building_path: "assets/building/building.obj" # 建筑物模型路径
   obstacle:
     # ---- 静态障碍 ----
-    num_obstacles: 0
+    num_obstacles: 100
     min_radius: 5
     max_radius: 10
     min_height: 60
     max_height: 200
     # ---- 动态障碍 ----
     dynamic:
-      num_obstacles: 100    # 只要 >0 就会启用 DynamicVoxelizedScene
+      num_obstacles: 10    # 只要 >0 就会启用 DynamicVoxelizedScene
       min_radius: 5
       max_radius: 10
       min_height: 60

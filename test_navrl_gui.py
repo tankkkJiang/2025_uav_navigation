@@ -96,7 +96,7 @@ def build_agent(env: NavRLEnv, model_path: str) -> PPO_continuous_RNN:
     return agent
 
 # --------------------------- Main Loop -----------------------------
-def random_play(env: NavRLEnv, hz: int = 30, print_freq: int = 10):
+def random_play(env: NavRLEnv, hz: int = 30, print_freq: int = 100):
     """无模型随机动作，可视化"""
     print(">>> 随机动作测试，按 Ctrl+C 终止 ...")
     dt = 1.0 / hz
@@ -126,7 +126,7 @@ def random_play(env: NavRLEnv, hz: int = 30, print_freq: int = 10):
     finally:
         env.close()
 
-def policy_play(env: NavRLEnv, agent: PPO_continuous_RNN, hz: int = 30, print_freq: int = 1):
+def policy_play(env: NavRLEnv, agent: PPO_continuous_RNN, hz: int = 30, print_freq: int = 100):
     """加载模型后回放，可视化"""
     print(">>> 策略回放，按 Ctrl+C 终止 ...")
     # 如果训练时用了状态归一化，可自行选择是否加载均值方差；此处简单关闭
