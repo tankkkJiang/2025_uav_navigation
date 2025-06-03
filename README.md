@@ -125,3 +125,5 @@ resent：利用resnet18与训练网络将深度图转为维度为25的tensor。
 
 每隔若干个 PyBullet stepSimulation() 之后，就会检查一遍 self.scene.step(dt)，从而把所有动态障碍更新最新位置。再之后根据 self.drone.check_collision() 来判断无人机是否与任意障碍物（静态或动态）产生碰撞。
 
+设置全部为动态障碍物的环境进行测试，发现会碰撞。
+![](media/2025-06-04-00-15-08.png)
