@@ -8,10 +8,6 @@ dependencies:
   - python=3.8.13
   - pip=24.2
 
-  # ------------------ CUDA / PyTorch ------------------
-  - torch=2.4.1           # Conda 会自动选带 cu121 的版本
-  - torchvision=0.19.1    # Conda 会自动选 cu121 对应的版本
-
   # ------------------ 基础库 ------------------
   - _libgcc_mutex=0.1
   - _openmp_mutex=5.1
@@ -34,7 +30,7 @@ dependencies:
   - libgcc-ng=9.1.0
   - libgfortran-ng=7.3.0
   - libgomp=11.2.0
-  - libopenjpeg=2.4.0  # 注意：有时叫 openjpeg 或 libopenjpeg，确保与系统匹配
+  - openjpeg=2.4.0
   - libpng=1.6.37
   - libstdcxx-ng=9.1.0
   - libtiff=4.2.0
