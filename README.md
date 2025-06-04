@@ -96,9 +96,10 @@ sim/world.py 是仿真总控台，统一管理场景与无人机。
 2. 在 YAML 的 `active_components` 中放开注释、写上它的类名和权重。把其他权重进行修改。
 
 ## 3. 运行
-安装环境
+安装环境，再根据配置安装pytorch，参考：
 ```bash
 conda env create -f uav_env.yml
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 ```
 
 ## 4. 其他
