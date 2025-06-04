@@ -4,6 +4,8 @@ channels:
   - conda-forge
   - defaults
 dependencies:
+  - torch=2.4.1  # Conda 会自动选带 cu121 的版本
+  - torchvision=0.19.1  # Conda 同样会选 cu121 版本
   - _libgcc_mutex=0.1
   - _openmp_mutex=5.1
   - attrs=24.2.0
@@ -209,8 +211,6 @@ dependencies:
     - tensorboard==2.14.0
     - tensorboard-data-server==0.7.2
     - texttable==1.7.0
-    - torch==2.4.1
-    - torchvision==0.19.1+cu121
     - trimesh==4.6.5
     - triton==3.0.0
     - typing_extensions==4.12.2

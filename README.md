@@ -39,7 +39,8 @@ drone_navigation/                            # 项目根目录
 ├── train_ppo_navrl.py
 ├── test_ppo_navrl.py
 ├── test_navrl_gui.py 
-├── test_ppo_discrete_rnn.py          
+├── test_ppo_discrete_rnn.py    
+├── uav_env.yml      
 └── train_ppo_discrete_rnn.py                
 ```
 
@@ -97,10 +98,7 @@ sim/world.py 是仿真总控台，统一管理场景与无人机。
 ## 3. 运行
 安装环境
 ```bash
-conda create -n drones python=3.10
-conda activate drones
-pip3 install --upgrade pip 
-pip install -r requirements.txt
+conda env create -f uav_env.yml
 ```
 
 ## 4. 其他
