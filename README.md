@@ -99,9 +99,8 @@ sim/world.py 是仿真总控台，统一管理场景与无人机。
 ```bash
 conda create -n drones python=3.10
 conda activate drones
-pip3 install --upgrade pip
-
-pip install -e .
+pip3 install --upgrade pip 
+pip install -r requirements.txt
 ```
 
 ## 4. 其他
