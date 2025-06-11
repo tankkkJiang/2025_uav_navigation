@@ -35,7 +35,11 @@ drone_navigation/                            # 项目根目录
 │   ├── ppo_discrete_rnn/                  # PPO离散动作RNN模型
 │   │   ├── normalization.py
 │   │   ├── ppo_discrete_rnn.py
-│   └── └── replaybuffer.py    
+│   │   └── replaybuffer.py
+│   ├── ppo_continuous_rnn/
+│   │   ├── normalization.py
+│   │   ├── ppo_continuous_rnn.py
+│   └── └── replaybuffer.py
 ├── train_ppo_navrl.py
 ├── test_ppo_navrl.py
 ├── test_navrl_gui.py 
