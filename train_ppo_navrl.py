@@ -7,6 +7,9 @@ train_ppo_navrl.py
 import os, yaml, gym, argparse, logging, torch, numpy as np
 from datetime import datetime
 from torch.utils.tensorboard import SummaryWriter
+
+from swanlab.data.sdk import swanlab_settings
+swanlab_settings.requirements_collect = False
 import swanlab as wandb
 
 from model.ppo_continuous_rnn.normalization import Normalization, RewardScaling
