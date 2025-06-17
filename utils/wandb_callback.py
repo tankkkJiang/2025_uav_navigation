@@ -1,4 +1,4 @@
-import wandb
+import swanlab as wandb
 import numpy as np
 from stable_baselines3.common.callbacks import BaseCallback
 from env.navigation_env import NavigationEnv
